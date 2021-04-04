@@ -1,7 +1,10 @@
 package shared
 
 // Invite represents a simple invite code
-type Invite string
+type Invite struct {
+	Code    string `json:"code"`
+	Created int64  `json:"created"`
+}
 
 // InviteService represents the service which keeps track of invite codes
 type InviteService interface {

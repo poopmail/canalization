@@ -9,6 +9,7 @@ type Message struct {
 	From    string       `json:"from"`
 	Subject string       `json:"subject"`
 	Content string       `json:"content"`
+	Created int64        `json:"created"`
 }
 
 // MessageService represents a service which keeps track of messages

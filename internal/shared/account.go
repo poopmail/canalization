@@ -5,6 +5,7 @@ type Account struct {
 	Username string `json:"username"`
 	Password string `json:"password,omitempty"`
 	Admin    bool   `json:"admin"`
+	Created  int64  `json:"created"`
 }
 
 // AccountService represents a service which keeps track of user accounts
