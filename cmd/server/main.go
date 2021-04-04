@@ -1,11 +1,14 @@
 package main
 
 import (
+	"context"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
+	"github.com/go-redis/redis/v8"
 	"github.com/joho/godotenv"
 	"github.com/poopmail/canalization/internal/api"
 	"github.com/poopmail/canalization/internal/database/postgres"
@@ -27,6 +30,37 @@ func main() {
 		log.Fatalln(err)
 	}
 
+	// Connect to the configured redis host
+	rdb := redis.NewClient(&redis.Options{
+		Addr: env.MustString("CANAL_REDIS_ADDRESS", "localhost:6379"),
+		OnConnect: func(_ context.Context, _ *redis.Conn) error {
+			logrus.Info("Opening new Redis connection")
+			return nil
+		},
+		Username: env.MustString("CANAL_REDIS_USERNAME", ""),
+		Password: env.MustString("CANAL_REDIS_PASSWORD", ""),
+		DB:       0,
+	})
+
+	// Set the pre-defined domains
+	rawDomains := env.MustStringSlice("CANAL_DOMAIN_OVERRIDE", ",", []string{})
+	domains := make([]interface{}, 0, len(rawDomains))
+	for _, rawDomain := range rawDomains {
+		domains = append(domains, rawDomain)
+	}
+	if len(domains) > 0 {
+		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		defer cancel()
+
+		if err := rdb.Del(ctx, "__domains").Err(); err != nil {
+			log.Fatal(err)
+		}
+
+		if err := rdb.SAdd(ctx, "__domains", domains...).Err(); err != nil {
+			log.Fatal(err)
+		}
+	}
+
 	// Start up the REST API
 	restApi := &api.API{
 		Settings: &api.Settings{
@@ -34,6 +68,13 @@ func main() {
 			RequestsPerMinute: env.MustInt("CANAL_API_RATE_LIMIT", 60),
 			Production:        static.ApplicationMode == "PROD",
 			Version:           static.ApplicationVersion,
+		},
+		Services: &api.Services{
+			Invites:   driver.Invites,
+			Accounts:  driver.Accounts,
+			Mailboxes: driver.Mailboxes,
+			Messages:  driver.Messages,
+			Redis:     rdb,
 		},
 	}
 	go func() {

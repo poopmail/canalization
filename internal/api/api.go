@@ -1,6 +1,7 @@
 package api
 
 import (
+	"github.com/go-redis/redis/v8"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
@@ -32,6 +33,7 @@ type Services struct {
 	Accounts  shared.AccountService
 	Mailboxes shared.MailboxService
 	Messages  shared.MessageService
+	Redis     *redis.Client
 }
 
 // Serve serves the REST API

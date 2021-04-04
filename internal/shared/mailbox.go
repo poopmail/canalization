@@ -12,7 +12,7 @@ type MailboxService interface {
 	Count() (int, error)
 	Mailboxes(skip, limit int) ([]*Mailbox, error)
 	CountInAccount(account string) (int, error)
-	MailboxesInAccount(account string) ([]*Mailbox, error)
+	MailboxesInAccount(account string, skip, limit int) ([]*Mailbox, error)
 	Mailbox(address string) (*Mailbox, error)
 	CreateOrReplace(mailbox *Mailbox) error
 	Delete(address string) error
