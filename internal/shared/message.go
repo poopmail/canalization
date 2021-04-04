@@ -7,6 +7,7 @@ type Message struct {
 	ID      snowflake.ID `json:"id"`
 	Mailbox string       `json:"mailbox"`
 	From    string       `json:"from"`
+	Subject string       `json:"subject"`
 	Content string       `json:"content"`
 }
 
