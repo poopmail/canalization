@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -24,10 +23,10 @@ func main() {
 	// Initialize the postgres database driver
 	driver, err := postgres.NewDriver(env.MustString("CANAL_POSTGRES_DSN", ""))
 	if err != nil {
-		log.Fatalln(err)
+		logrus.Fatal(err)
 	}
 	if err := driver.Migrate(); err != nil {
-		log.Fatalln(err)
+		logrus.Fatal(err)
 	}
 
 	// Connect to the configured redis host
@@ -41,6 +40,11 @@ func main() {
 		Password: env.MustString("CANAL_REDIS_PASSWORD", ""),
 		DB:       0,
 	})
+	defer func() {
+		if err := rdb.Close(); err != nil {
+			logrus.Error(err)
+		}
+	}()
 
 	// Set the pre-defined domains
 	rawDomains := env.MustStringSlice("CANAL_DOMAIN_OVERRIDE", ",", []string{})
@@ -53,11 +57,11 @@ func main() {
 		defer cancel()
 
 		if err := rdb.Del(ctx, "__domains").Err(); err != nil {
-			log.Fatal(err)
+			logrus.Fatal(err)
 		}
 
 		if err := rdb.SAdd(ctx, "__domains", domains...).Err(); err != nil {
-			log.Fatal(err)
+			logrus.Fatal(err)
 		}
 	}
 
