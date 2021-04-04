@@ -11,11 +11,10 @@ type Mailbox struct {
 type MailboxService interface {
 	Count() (int, error)
 	Mailboxes(skip, limit int) ([]*Mailbox, error)
-	CountWithAccount(account string) (int, error)
-	MailboxesWithAccount(account string) ([]*Mailbox, error)
+	CountInAccount(account string) (int, error)
+	MailboxesInAccount(account string) ([]*Mailbox, error)
 	Mailbox(address string) (*Mailbox, error)
 	CreateOrReplace(mailbox *Mailbox) error
-	Transfer(oldAccount, newAccount string) error
 	Delete(address string) error
-	DeleteWithAccount(account string) error
+	DeleteInAccount(account string) error
 }

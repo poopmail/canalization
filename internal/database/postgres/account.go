@@ -28,7 +28,7 @@ func (service *accountService) Count() (int, error) {
 	return count, nil
 }
 
-// Accounts retrieves the desired amount of accounts out of the namespace
+// Accounts retrieves the desired amount of accounts out of the database
 func (service *accountService) Accounts(skip, limit int) ([]*shared.Account, error) {
 	query := fmt.Sprintf("SELECT * FROM accounts ORDER BY created LIMIT %d OFFSET %d", limit, skip)
 

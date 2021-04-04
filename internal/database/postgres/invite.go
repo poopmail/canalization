@@ -28,7 +28,7 @@ func (service *inviteService) Count() (int, error) {
 	return count, nil
 }
 
-// Invites retrieves the desired amount of invites out of the namespace
+// Invites retrieves the desired amount of invites out of the database
 func (service *inviteService) Invites(skip, limit int) ([]*shared.Invite, error) {
 	query := fmt.Sprintf("SELECT * FROM invites ORDER BY created LIMIT %d OFFSET %d", limit, skip)
 
