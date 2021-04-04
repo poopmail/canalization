@@ -70,15 +70,16 @@ func (service *accountService) Account(username string) (*shared.Account, error)
 // CreateOrReplace creates or replaces an account inside the database
 func (service *accountService) CreateOrReplace(account *shared.Account) error {
 	query := `
-		INSERT INTO accounts (username, password, admin, created)
-		VALUES ($1, $2, $3, $4)
+		INSERT INTO accounts (username, password, admin, created, token_reset)
+		VALUES ($1, $2, $3, $4, $5)
 		ON CONFLICT (username) DO UPDATE
 			SET password = excluded.password,
 				admin = excluded.admin,
-				created = excluded.created
+				created = excluded.created,
+				token_reset = excluded.token_reset
 	`
 
-	_, err := service.pool.Exec(context.Background(), query, account.Username, account.Password, account.Admin, account.Created)
+	_, err := service.pool.Exec(context.Background(), query, account.Username, account.Password, account.Admin, account.Created, account.TokenReset)
 	return err
 }
 
@@ -93,7 +94,7 @@ func (service *accountService) Delete(username string) error {
 func rowToAccount(row pgx.Row) (*shared.Account, error) {
 	account := new(shared.Account)
 
-	if err := row.Scan(&account.Username, &account.Password, &account.Admin, &account.Created); err != nil {
+	if err := row.Scan(&account.Username, &account.Password, &account.Admin, &account.Created, &account.TokenReset); err != nil {
 		return nil, err
 	}
 

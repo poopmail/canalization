@@ -11,6 +11,7 @@ create table if not exists accounts (
     password text not null,
     admin bool not null default false,
     created bigint not null default date_part('epoch'::text, now()),
+    token_reset bigint not null default date_part('epoch'::text, now()),
     primary key (username)
 );
 
