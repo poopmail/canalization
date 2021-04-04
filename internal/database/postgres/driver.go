@@ -18,6 +18,7 @@ type postgresDriver struct {
 	dsn      string
 	pool     *pgxpool.Pool
 	Accounts *accountService
+	Invites  *inviteService
 }
 
 // NewDriver creates a new postgres database driver
@@ -33,6 +34,7 @@ func NewDriver(dsn string) (*postgresDriver, error) {
 		dsn:      dsn,
 		pool:     pool,
 		Accounts: &accountService{pool: pool},
+		Invites:  &inviteService{pool: pool},
 	}, nil
 }
 

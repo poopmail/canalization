@@ -9,8 +9,8 @@ type Invite struct {
 // InviteService represents the service which keeps track of invite codes
 type InviteService interface {
 	Count() (int, error)
-	Invites(skip, limit int) ([]Invite, error)
-	Validate(invite string) (bool, error)
-	Create(invite Invite) error
-	Delete(invite string) error
+	Invites(skip, limit int) ([]*Invite, error)
+	Invite(code string) (*Invite, error)
+	CreateOrReplace(invite *Invite) error
+	Delete(code string) error
 }
