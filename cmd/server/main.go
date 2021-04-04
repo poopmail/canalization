@@ -7,8 +7,11 @@ import (
 	"syscall"
 
 	"github.com/joho/godotenv"
+	"github.com/poopmail/canalization/internal/api"
 	"github.com/poopmail/canalization/internal/database/postgres"
 	"github.com/poopmail/canalization/internal/env"
+	"github.com/poopmail/canalization/internal/static"
+	"github.com/sirupsen/logrus"
 )
 
 func main() {
@@ -24,7 +27,25 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	// TODO: Implement startup logic
+	// Start up the REST API
+	restApi := &api.API{
+		Settings: &api.Settings{
+			Address:           env.MustString("CANAL_API_ADDRESS", ":8080"),
+			RequestsPerMinute: env.MustInt("CANAL_API_RATE_LIMIT", 60),
+			Production:        static.ApplicationMode == "PROD",
+			Version:           static.ApplicationVersion,
+		},
+	}
+	go func() {
+		if err := restApi.Serve(); err != nil {
+			logrus.Fatal(err)
+		}
+	}()
+	defer func() {
+		if err := restApi.Shutdown(); err != nil {
+			logrus.Error(err)
+		}
+	}()
 
 	// Wait for the program to exit
 	sc := make(chan os.Signal, 1)
