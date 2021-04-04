@@ -12,6 +12,7 @@ import (
 	"github.com/poopmail/canalization/internal/api"
 	"github.com/poopmail/canalization/internal/database/postgres"
 	"github.com/poopmail/canalization/internal/env"
+	"github.com/poopmail/canalization/internal/karen"
 	"github.com/poopmail/canalization/internal/static"
 	"github.com/sirupsen/logrus"
 )
@@ -23,10 +24,10 @@ func main() {
 	// Initialize the postgres database driver
 	driver, err := postgres.NewDriver(env.MustString("CANAL_POSTGRES_DSN", ""))
 	if err != nil {
-		logrus.Fatal(err)
+		logrus.WithError(err).Fatal()
 	}
 	if err := driver.Migrate(); err != nil {
-		logrus.Fatal(err)
+		logrus.WithError(err).Fatal()
 	}
 
 	// Connect to the configured redis host
@@ -42,7 +43,7 @@ func main() {
 	})
 	defer func() {
 		if err := rdb.Close(); err != nil {
-			logrus.Error(err)
+			logrus.WithError(err).Error()
 		}
 	}()
 
@@ -57,13 +58,16 @@ func main() {
 		defer cancel()
 
 		if err := rdb.Del(ctx, "__domains").Err(); err != nil {
-			logrus.Fatal(err)
+			logrus.WithError(err).Fatal()
 		}
 
 		if err := rdb.SAdd(ctx, "__domains", domains...).Err(); err != nil {
-			logrus.Fatal(err)
+			logrus.WithError(err).Fatal()
 		}
 	}
+
+	// Initialize the karen logrus hook
+	logrus.AddHook(&karen.LogrusHook{Redis: rdb})
 
 	// Start up the REST API
 	restApi := &api.API{
@@ -83,12 +87,12 @@ func main() {
 	}
 	go func() {
 		if err := restApi.Serve(); err != nil {
-			logrus.Fatal(err)
+			logrus.WithError(err).Fatal()
 		}
 	}()
 	defer func() {
 		if err := restApi.Shutdown(); err != nil {
-			logrus.Error(err)
+			logrus.WithError(err).Error()
 		}
 	}()
 
