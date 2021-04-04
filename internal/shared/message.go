@@ -4,12 +4,18 @@ import "github.com/bwmarrin/snowflake"
 
 // Message represents an incoming email message
 type Message struct {
-	ID      snowflake.ID `json:"id"`
-	Mailbox string       `json:"mailbox"`
-	From    string       `json:"from"`
-	Subject string       `json:"subject"`
-	Content string       `json:"content"`
-	Created int64        `json:"created"`
+	ID      snowflake.ID    `json:"id"`
+	Mailbox string          `json:"mailbox"`
+	From    string          `json:"from"`
+	Subject string          `json:"subject"`
+	Content *MessageContent `json:"content"`
+	Created int64           `json:"created"`
+}
+
+// MessageContent represents the content of an incoming email message
+type MessageContent struct {
+	Plain string `json:"plain"`
+	HTML  string `json:"html"`
 }
 
 // MessageService represents a service which keeps track of messages
