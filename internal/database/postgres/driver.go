@@ -4,6 +4,7 @@ import (
 	"context"
 	"embed"
 	"errors"
+
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	"github.com/jackc/pgx/v4/pgxpool"

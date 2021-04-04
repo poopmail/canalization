@@ -1,8 +1,9 @@
 package id
 
 import (
-	"github.com/bwmarrin/snowflake"
 	"log"
+
+	"github.com/bwmarrin/snowflake"
 )
 
 var node *snowflake.Node

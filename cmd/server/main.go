@@ -1,13 +1,14 @@
 package main
 
 import (
-	"github.com/joho/godotenv"
-	"github.com/poopmail/canalization/internal/database/postgres"
-	"github.com/poopmail/canalization/internal/env"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/joho/godotenv"
+	"github.com/poopmail/canalization/internal/database/postgres"
+	"github.com/poopmail/canalization/internal/env"
 )
 
 func main() {
@@ -27,6 +28,6 @@ func main() {
 
 	// Wait for the program to exit
 	sc := make(chan os.Signal, 1)
-	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)
+	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM)
 	<-sc
 }
