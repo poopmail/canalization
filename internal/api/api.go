@@ -9,6 +9,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/pprof"
 	recov "github.com/gofiber/fiber/v2/middleware/recover"
 	v1 "github.com/poopmail/canalization/internal/api/v1"
+	"github.com/poopmail/canalization/internal/auth"
 	"github.com/poopmail/canalization/internal/shared"
 	"github.com/sirupsen/logrus"
 )
@@ -30,11 +31,12 @@ type Settings struct {
 
 // Services holds all services used by the REST API
 type Services struct {
-	Invites   shared.InviteService
-	Accounts  shared.AccountService
-	Mailboxes shared.MailboxService
-	Messages  shared.MessageService
-	Redis     *redis.Client
+	Authenticator auth.Authenticator
+	Invites       shared.InviteService
+	Accounts      shared.AccountService
+	Mailboxes     shared.MailboxService
+	Messages      shared.MessageService
+	Redis         *redis.Client
 }
 
 // Serve serves the REST API
@@ -82,6 +84,7 @@ func (api *API) Serve() error {
 		ctx.Locals("__settings_production", api.Settings.Production)
 		ctx.Locals("__settings_version", api.Settings.Version)
 
+		ctx.Locals("__services_authenticator", api.Services.Authenticator)
 		ctx.Locals("__services_invites", api.Services.Invites)
 		ctx.Locals("__services_accounts", api.Services.Accounts)
 		ctx.Locals("__services_mailboxes", api.Services.Mailboxes)

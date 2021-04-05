@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/bwmarrin/snowflake"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/poopmail/canalization/internal/shared"
@@ -52,8 +53,23 @@ func (service *accountService) Accounts(skip, limit int) ([]*shared.Account, err
 	return accounts, nil
 }
 
-// Account retrieves a specific account with a specific username out of the database
-func (service *accountService) Account(username string) (*shared.Account, error) {
+// Account retrieves a specific account out of the database
+func (service *accountService) Account(id snowflake.ID) (*shared.Account, error) {
+	query := "SELECT * FROM accounts WHERE id = $1"
+
+	account, err := rowToAccount(service.pool.QueryRow(context.Background(), query, id))
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return account, nil
+}
+
+// AccountByUsername retrieves a specific account with a specific username out of the database
+func (service *accountService) AccountByUsername(username string) (*shared.Account, error) {
 	query := "SELECT * FROM accounts WHERE username = $1"
 
 	account, err := rowToAccount(service.pool.QueryRow(context.Background(), query, username))
@@ -70,31 +86,32 @@ func (service *accountService) Account(username string) (*shared.Account, error)
 // CreateOrReplace creates or replaces an account inside the database
 func (service *accountService) CreateOrReplace(account *shared.Account) error {
 	query := `
-		INSERT INTO accounts (username, password, admin, created, token_reset)
-		VALUES ($1, $2, $3, $4, $5)
-		ON CONFLICT (username) DO UPDATE
-			SET password = excluded.password,
+		INSERT INTO accounts (id, username, password, admin, created, token_reset)
+		VALUES ($1, $2, $3, $4, $5, $6)
+		ON CONFLICT (id) DO UPDATE
+			SET username = excluded.username,
+				password = excluded.password,
 				admin = excluded.admin,
 				created = excluded.created,
 				token_reset = excluded.token_reset
 	`
 
-	_, err := service.pool.Exec(context.Background(), query, account.Username, account.Password, account.Admin, account.Created, account.TokenReset)
+	_, err := service.pool.Exec(context.Background(), query, account.ID, account.Username, account.Password, account.Admin, account.Created, account.TokenReset)
 	return err
 }
 
-// Delete deletes a specific account with a specific username out of the database
-func (service *accountService) Delete(username string) error {
-	query := "DELETE FROM accounts WHERE username = $1"
+// Delete deletes a specific account out of the database
+func (service *accountService) Delete(id snowflake.ID) error {
+	query := "DELETE FROM accounts WHERE id = $1"
 
-	_, err := service.pool.Exec(context.Background(), query, username)
+	_, err := service.pool.Exec(context.Background(), query, id)
 	return err
 }
 
 func rowToAccount(row pgx.Row) (*shared.Account, error) {
 	account := new(shared.Account)
 
-	if err := row.Scan(&account.Username, &account.Password, &account.Admin, &account.Created, &account.TokenReset); err != nil {
+	if err := row.Scan(&account.ID, &account.Username, &account.Password, &account.Admin, &account.Created, &account.TokenReset); err != nil {
 		return nil, err
 	}
 

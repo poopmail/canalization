@@ -10,9 +10,11 @@ import (
 	"github.com/go-redis/redis/v8"
 	"github.com/joho/godotenv"
 	"github.com/poopmail/canalization/internal/api"
+	"github.com/poopmail/canalization/internal/auth"
 	"github.com/poopmail/canalization/internal/database/postgres"
 	"github.com/poopmail/canalization/internal/env"
 	"github.com/poopmail/canalization/internal/karen"
+	"github.com/poopmail/canalization/internal/random"
 	"github.com/poopmail/canalization/internal/static"
 	"github.com/sirupsen/logrus"
 )
@@ -70,6 +72,13 @@ func main() {
 	// Initialize the karen logrus hook
 	logrus.AddHook(&karen.LogrusHook{Redis: rdb})
 
+	// Initialize the authenticator
+	authenticator := auth.NewJWTAuthenticator(
+		env.MustString("CANAL_AUTH_JWT_SIGNING_KEY", random.RandomString(64)),
+		time.Duration(int64(env.MustInt("CANAL_AUTH_JWT_LIFETIME", 10080))*int64(time.Minute)),
+		driver.Accounts,
+	)
+
 	// Start up the REST API
 	restApi := &api.API{
 		Settings: &api.Settings{
@@ -79,11 +88,12 @@ func main() {
 			Version:           static.ApplicationVersion,
 		},
 		Services: &api.Services{
-			Invites:   driver.Invites,
-			Accounts:  driver.Accounts,
-			Mailboxes: driver.Mailboxes,
-			Messages:  driver.Messages,
-			Redis:     rdb,
+			Authenticator: authenticator,
+			Invites:       driver.Invites,
+			Accounts:      driver.Accounts,
+			Mailboxes:     driver.Mailboxes,
+			Messages:      driver.Messages,
+			Redis:         rdb,
 		},
 	}
 	go func() {
