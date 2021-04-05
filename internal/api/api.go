@@ -98,6 +98,8 @@ func (api *API) Serve() error {
 	v1group := app.Group("/v1")
 	{
 		v1group.Get("/info", v1.EndpointGetInfo)
+
+		v1group.Post("/auth", v1.EndpointPostAuth)
 	}
 
 	logrus.WithField("address", api.Settings.Address).Info("Serving the REST API")
