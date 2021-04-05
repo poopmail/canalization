@@ -39,7 +39,7 @@ func main() {
 		},
 		Username: env.MustString("CANAL_REDIS_USERNAME", ""),
 		Password: env.MustString("CANAL_REDIS_PASSWORD", ""),
-		DB:       0,
+		DB:       env.MustInt("CANAL_REDIS_DATABASE", 0),
 	})
 	defer func() {
 		logrus.Info("Closing the Redis connection pool")
