@@ -34,7 +34,10 @@ func (hook *LogrusHook) Levels() []logrus.Level {
 func (hook *LogrusHook) Fire(entry *logrus.Entry) error {
 	msg := entry.Message
 	if err, ok := entry.Data[logrus.ErrorKey].(error); ok {
-		msg = tracerr.Sprint(tracerr.Wrap(err))
+		if msg != "" {
+			msg += "\n \n"
+		}
+		msg += tracerr.Sprint(tracerr.Wrap(err))
 	}
 
 	return Send(hook.Redis, Message{

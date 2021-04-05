@@ -36,7 +36,7 @@ func (msg Message) Encode() (string, error) {
 		return "", err
 	}
 
-	return base64.RawURLEncoding.EncodeToString(jsonBytes), nil
+	return base64.StdEncoding.EncodeToString(jsonBytes), nil
 }
 
 // Send sends a structured message to the configured karen instance

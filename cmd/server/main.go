@@ -42,6 +42,7 @@ func main() {
 		DB:       0,
 	})
 	defer func() {
+		logrus.Info("Closing the Redis connection pool")
 		if err := rdb.Close(); err != nil {
 			logrus.WithError(err).Error()
 		}
