@@ -102,6 +102,29 @@ func main() {
 		}
 	}()
 
+	// Notify karen about the service startup and shutdown
+	if static.ApplicationMode == "PROD" {
+		if err := karen.Send(rdb, karen.Message{
+			Type:        karen.MessageTypeInfo,
+			Service:     static.KarenServiceName,
+			Topic:       "Startup",
+			Description: "The service is now running.",
+		}); err != nil {
+			logrus.WithError(err).Error()
+		}
+
+		defer func() {
+			if err := karen.Send(rdb, karen.Message{
+				Type:        karen.MessageTypeInfo,
+				Service:     static.KarenServiceName,
+				Topic:       "Shutdown",
+				Description: "The service has shut down.",
+			}); err != nil {
+				logrus.WithError(err).Error()
+			}
+		}()
+	}
+
 	// Wait for the program to exit
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM)
