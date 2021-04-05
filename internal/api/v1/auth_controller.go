@@ -4,13 +4,11 @@ import (
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/poopmail/canalization/internal/auth"
 	"github.com/poopmail/canalization/internal/hashing"
-	"github.com/poopmail/canalization/internal/shared"
 )
 
 // MiddlewareAuth handles the first stage of user authentication and injects the user as executor into the context
-func MiddlewareAuth(adminRequired bool) fiber.Handler {
+func (app *App) MiddlewareAuth(adminRequired bool) fiber.Handler {
 	return func(ctx *fiber.Ctx) error {
 		// Try to parse the authorization header
 		header := strings.SplitN(ctx.Get("Authorization"), " ", 2)
@@ -19,12 +17,8 @@ func MiddlewareAuth(adminRequired bool) fiber.Handler {
 		}
 
 		// Validate and extract the account out of the token
-		authenticator := ctx.Locals("__services_authenticator").(auth.Authenticator)
-		valid, account, err := authenticator.ProcessToken(header[1])
-		if err != nil {
-			return err
-		}
-		if !valid {
+		valid, account, err := app.Authenticator.ProcessToken(header[1])
+		if err != nil || !valid {
 			return fiber.ErrUnauthorized
 		}
 
@@ -44,7 +38,7 @@ type endpointPostAuthRequestBody struct {
 }
 
 // EndpointPostAuth handles the 'POST /v1/auth' API endpoint
-func EndpointPostAuth(ctx *fiber.Ctx) error {
+func (app *App) EndpointPostAuth(ctx *fiber.Ctx) error {
 	// Try to parse the request body into a struct
 	body := new(endpointPostAuthRequestBody)
 	if err := ctx.BodyParser(body); err != nil {
@@ -55,8 +49,7 @@ func EndpointPostAuth(ctx *fiber.Ctx) error {
 	}
 
 	// Try to retrieve the account the user wants to log in with
-	accounts := ctx.Locals("__services_accounts").(shared.AccountService)
-	account, err := accounts.AccountByUsername(body.Username)
+	account, err := app.Accounts.AccountByUsername(body.Username)
 	if err != nil {
 		return err
 	}
@@ -74,8 +67,7 @@ func EndpointPostAuth(ctx *fiber.Ctx) error {
 	}
 
 	// Create and return a new authentication token
-	authenticator := ctx.Locals("__services_authenticator").(auth.Authenticator)
-	token, err := authenticator.GenerateToken(account)
+	token, err := app.Authenticator.GenerateToken(account)
 	if err != nil {
 		return err
 	}

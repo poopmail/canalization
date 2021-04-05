@@ -32,17 +32,16 @@ func main() {
 		logrus.WithError(err).Fatal()
 	}
 
-	// Connect to the configured redis host
-	rdb := redis.NewClient(&redis.Options{
-		Addr: env.MustString("CANAL_REDIS_ADDRESS", "localhost:6379"),
-		OnConnect: func(_ context.Context, _ *redis.Conn) error {
-			logrus.Info("Opening new Redis connection")
-			return nil
-		},
-		Username: env.MustString("CANAL_REDIS_USERNAME", ""),
-		Password: env.MustString("CANAL_REDIS_PASSWORD", ""),
-		DB:       env.MustInt("CANAL_REDIS_DATABASE", 0),
-	})
+	// Initialize the Redis client
+	options, err := redis.ParseURL(env.MustString("CANAL_REDIS_URL", "redis://localhost:6379/0"))
+	if err != nil {
+		logrus.WithError(err).Fatal()
+	}
+	options.OnConnect = func(_ context.Context, _ *redis.Conn) error {
+		logrus.Info("Opening new Redis connection")
+		return nil
+	}
+	rdb := redis.NewClient(options)
 	defer func() {
 		logrus.Info("Closing the Redis connection pool")
 		if err := rdb.Close(); err != nil {
@@ -51,20 +50,16 @@ func main() {
 	}()
 
 	// Set the pre-defined domains
-	rawDomains := env.MustStringSlice("CANAL_DOMAIN_OVERRIDE", ",", []string{})
-	domains := make([]interface{}, 0, len(rawDomains))
-	for _, rawDomain := range rawDomains {
-		domains = append(domains, rawDomain)
+	domains := env.MustStringSlice("CANAL_DOMAIN_OVERRIDE", ",", []string{})
+	processed := make([]interface{}, len(domains))
+	for i := range processed {
+		processed[i] = domains[i]
 	}
-	if len(domains) > 0 {
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		defer cancel()
-
-		if err := rdb.Del(ctx, "__domains").Err(); err != nil {
+	if len(processed) > 0 {
+		if err := rdb.Del(context.Background(), "__domains").Err(); err != nil {
 			logrus.WithError(err).Fatal()
 		}
-
-		if err := rdb.SAdd(ctx, "__domains", domains...).Err(); err != nil {
+		if err := rdb.SAdd(context.Background(), "__domains", processed...).Err(); err != nil {
 			logrus.WithError(err).Fatal()
 		}
 	}

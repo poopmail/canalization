@@ -1,9 +1,8 @@
 package id
 
 import (
-	"log"
-
 	"github.com/bwmarrin/snowflake"
+	"github.com/sirupsen/logrus"
 )
 
 var node *snowflake.Node
@@ -11,7 +10,7 @@ var node *snowflake.Node
 func init() {
 	created, err := snowflake.NewNode(1)
 	if err != nil {
-		log.Fatalln(err)
+		logrus.WithError(err).Fatal()
 	}
 	node = created
 }

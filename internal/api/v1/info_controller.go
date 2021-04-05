@@ -1,11 +1,24 @@
 package v1
 
-import "github.com/gofiber/fiber/v2"
+import (
+	"context"
+
+	"github.com/gofiber/fiber/v2"
+)
 
 // EndpointGetInfo handles the 'GET /v1/info' API endpoint
-func EndpointGetInfo(ctx *fiber.Ctx) error {
+func (app *App) EndpointGetInfo(ctx *fiber.Ctx) error {
 	return ctx.JSON(fiber.Map{
-		"production": ctx.Locals("__settings_production").(bool),
-		"version":    ctx.Locals("__settings_version").(string),
+		"production": app.Production,
+		"version":    app.Version,
 	})
+}
+
+// EndpointGetDomains handles the 'GET /v1/domains' API endpoint
+func (app *App) EndpointGetDomains(ctx *fiber.Ctx) error {
+	domains, err := app.Redis.SMembers(context.Background(), "__domains").Result()
+	if err != nil {
+		return err
+	}
+	return ctx.JSON(domains)
 }

@@ -10,7 +10,7 @@ import (
 
 // JWTAuthenticator represents an authenticator implementation for JWTs
 type JWTAuthenticator struct {
-	signingKey string
+	signingKey []byte
 	lifetime   time.Duration
 	accounts   shared.AccountService
 }
@@ -18,7 +18,7 @@ type JWTAuthenticator struct {
 // NewJWTAuthenticator creates a new JWT authenticator
 func NewJWTAuthenticator(signingKey string, lifetime time.Duration, accounts shared.AccountService) *JWTAuthenticator {
 	return &JWTAuthenticator{
-		signingKey: signingKey,
+		signingKey: []byte(signingKey),
 		lifetime:   lifetime,
 		accounts:   accounts,
 	}

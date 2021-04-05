@@ -77,30 +77,20 @@ func (api *API) Serve() error {
 		},
 	}))
 
-	// Inject the application data
-	app.Use(func(ctx *fiber.Ctx) error {
-		ctx.Locals("__settings_address", api.Settings.Address)
-		ctx.Locals("__settings_requests_per_minute", api.Settings.RequestsPerMinute)
-		ctx.Locals("__settings_production", api.Settings.Production)
-		ctx.Locals("__settings_version", api.Settings.Version)
-
-		ctx.Locals("__services_authenticator", api.Services.Authenticator)
-		ctx.Locals("__services_invites", api.Services.Invites)
-		ctx.Locals("__services_accounts", api.Services.Accounts)
-		ctx.Locals("__services_mailboxes", api.Services.Mailboxes)
-		ctx.Locals("__services_messages", api.Services.Messages)
-		ctx.Locals("__services_redis", api.Services.Redis)
-
-		return ctx.Next()
-	})
-
 	// Route the v1 API endpoints
-	v1group := app.Group("/v1")
-	{
-		v1group.Get("/info", v1.EndpointGetInfo)
+	(&v1.App{
+		Address:           api.Settings.Address,
+		RequestsPerMinute: api.Settings.RequestsPerMinute,
+		Production:        api.Settings.Production,
+		Version:           api.Settings.Version,
 
-		v1group.Post("/auth", v1.EndpointPostAuth)
-	}
+		Authenticator: api.Services.Authenticator,
+		Invites:       api.Services.Invites,
+		Accounts:      api.Services.Accounts,
+		Mailboxes:     api.Services.Mailboxes,
+		Messages:      api.Services.Messages,
+		Redis:         api.Services.Redis,
+	}).Route(app.Group("/v1"))
 
 	logrus.WithField("address", api.Settings.Address).Info("Serving the REST API")
 	api.app = app
