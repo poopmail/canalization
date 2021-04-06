@@ -19,7 +19,7 @@ type App struct {
 // Route routes the v1 API endpoints
 func (app *App) Route(router fiber.Router) {
 	router.Get("/info", app.EndpointGetInfo)
-	// TODO: Domains
+	router.Get("/domains", app.MiddlewareHandleBasicAuth, app.EndpointGetDomains)
 
 	router.Post("/auth/refresh_token", app.EndpointPostRefreshToken)
 	router.Get("/auth/access_token", app.EndpointGetAccessToken)
