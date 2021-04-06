@@ -56,10 +56,10 @@ func main() {
 		processed[i] = domains[i]
 	}
 	if len(processed) > 0 {
-		if err := rdb.Del(context.Background(), "__domains").Err(); err != nil {
+		if err := rdb.Del(context.Background(), static.DomainsRedisKey).Err(); err != nil {
 			logrus.WithError(err).Fatal()
 		}
-		if err := rdb.SAdd(context.Background(), "__domains", processed...).Err(); err != nil {
+		if err := rdb.SAdd(context.Background(), static.DomainsRedisKey, processed...).Err(); err != nil {
 			logrus.WithError(err).Fatal()
 		}
 	}

@@ -10,4 +10,8 @@ var (
 
 	// KarenServiceName represents the service name to use for this service when reporting incidents to karen
 	KarenServiceName = "canalization"
+
+	// DomainsRedisKey represents the Redis key under which all valid domains are saved
+	// As this key should not change in any time we just force it here
+	DomainsRedisKey = "__domains"
 )
