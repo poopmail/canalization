@@ -10,7 +10,7 @@ import (
 type RefreshToken struct {
 	ID          snowflake.ID `json:"id"`
 	Account     snowflake.ID `json:"account"`
-	Token       string       `json:"token"`
+	Token       string       `json:"token,omitempty"`
 	Description string       `json:"description"`
 	Created     int64        `json:"created"`
 }
@@ -22,5 +22,6 @@ type RefreshTokenService interface {
 	RefreshToken(account snowflake.ID, id snowflake.ID) (*RefreshToken, error)
 	CreateOrReplace(token *RefreshToken) error
 	Delete(account snowflake.ID, id snowflake.ID) error
+	DeleteAll(account snowflake.ID) error
 	DeleteExpired(valid time.Duration) (int64, error)
 }

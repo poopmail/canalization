@@ -92,6 +92,14 @@ func (service *refreshTokenService) Delete(account, id snowflake.ID) error {
 	return err
 }
 
+// DeleteAll deletes all refresh tokens from a specific account out of the database
+func (service *refreshTokenService) DeleteAll(account snowflake.ID) error {
+	query := "DELETE FROM refresh_tokens WHERE account = $1"
+
+	_, err := service.pool.Exec(context.Background(), query, account)
+	return err
+}
+
 // DeleteExpired deletes all expired refresh tokens
 func (service *refreshTokenService) DeleteExpired(valid time.Duration) (int64, error) {
 	query := "DELETE FROM refresh_tokens WHERE created < $1"

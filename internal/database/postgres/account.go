@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/bwmarrin/snowflake"
 	"github.com/jackc/pgx/v4"
@@ -70,9 +71,9 @@ func (service *accountService) Account(id snowflake.ID) (*shared.Account, error)
 
 // AccountByUsername retrieves a specific account with a specific username out of the database
 func (service *accountService) AccountByUsername(username string) (*shared.Account, error) {
-	query := "SELECT * FROM accounts WHERE username = $1"
+	query := "SELECT * FROM accounts WHERE LOWER(username) = $1"
 
-	account, err := rowToAccount(service.pool.QueryRow(context.Background(), query, username))
+	account, err := rowToAccount(service.pool.QueryRow(context.Background(), query, strings.ToLower(username)))
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, nil

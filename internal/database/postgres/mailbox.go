@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/bwmarrin/snowflake"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/poopmail/canalization/internal/shared"
@@ -54,7 +55,7 @@ func (service *mailboxService) Mailboxes(skip, limit int) ([]*shared.Mailbox, er
 }
 
 // CountInAccount counts the total amount of mailboxes in a specific account stored inside the database
-func (service *mailboxService) CountInAccount(account string) (int, error) {
+func (service *mailboxService) CountInAccount(account snowflake.ID) (int, error) {
 	query := "SELECT COUNT(*) FROM mailboxes WHERE account = $1"
 
 	row := service.pool.QueryRow(context.Background(), query, account)
@@ -68,7 +69,7 @@ func (service *mailboxService) CountInAccount(account string) (int, error) {
 }
 
 // MailboxesInAccount retrieves the desired amount of mailboxes in a specific account out of the database
-func (service *mailboxService) MailboxesInAccount(account string, skip, limit int) ([]*shared.Mailbox, error) {
+func (service *mailboxService) MailboxesInAccount(account snowflake.ID, skip, limit int) ([]*shared.Mailbox, error) {
 	query := fmt.Sprintf("SELECT * FROM mailboxes WHERE account = $1 ORDER BY created LIMIT %d OFFSET %d", limit, skip)
 
 	rows, err := service.pool.Query(context.Background(), query, account)
@@ -129,7 +130,7 @@ func (service *mailboxService) Delete(address string) error {
 }
 
 // DeleteInAccount deletes all mailboxes in a specific account out of the database
-func (service *mailboxService) DeleteInAccount(account string) error {
+func (service *mailboxService) DeleteInAccount(account snowflake.ID) error {
 	query := "DELETE FROM mailboxes WHERE account = $1"
 
 	_, err := service.pool.Exec(context.Background(), query, account)
