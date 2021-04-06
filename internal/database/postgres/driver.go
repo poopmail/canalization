@@ -16,12 +16,13 @@ var migrations embed.FS
 
 // postgresDriver represents the postgres database driver
 type postgresDriver struct {
-	dsn       string
-	pool      *pgxpool.Pool
-	Accounts  *accountService
-	Invites   *inviteService
-	Mailboxes *mailboxService
-	Messages  *messageService
+	dsn           string
+	pool          *pgxpool.Pool
+	Accounts      *accountService
+	RefreshTokens *refreshTokenService
+	Invites       *inviteService
+	Mailboxes     *mailboxService
+	Messages      *messageService
 }
 
 // NewDriver creates a new postgres database driver
@@ -34,12 +35,13 @@ func NewDriver(dsn string) (*postgresDriver, error) {
 
 	// Create and return the postgres driver
 	return &postgresDriver{
-		dsn:       dsn,
-		pool:      pool,
-		Accounts:  &accountService{pool: pool},
-		Invites:   &inviteService{pool: pool},
-		Mailboxes: &mailboxService{pool: pool},
-		Messages:  &messageService{pool: pool},
+		dsn:           dsn,
+		pool:          pool,
+		Accounts:      &accountService{pool: pool},
+		RefreshTokens: &refreshTokenService{pool: pool},
+		Invites:       &inviteService{pool: pool},
+		Mailboxes:     &mailboxService{pool: pool},
+		Messages:      &messageService{pool: pool},
 	}, nil
 }
 

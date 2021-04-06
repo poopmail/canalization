@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 
 	"github.com/go-redis/redis/v8"
-	"github.com/poopmail/canalization/internal/env"
+	"github.com/poopmail/canalization/internal/config"
 )
 
 // MessageType represents the type of an outgoing karen message
@@ -41,15 +41,10 @@ func (msg Message) Encode() (string, error) {
 
 // Send sends a structured message to the configured karen instance
 func Send(rdb *redis.Client, msg Message) error {
-	karenChannel := env.MustString("CANAL_KAREN_REDIS_CHANNEL", "")
-	if karenChannel == "" {
-		return nil
-	}
-
 	encoded, err := msg.Encode()
 	if err != nil {
 		return err
 	}
 
-	return rdb.Publish(context.Background(), karenChannel, encoded).Err()
+	return rdb.Publish(context.Background(), config.Loaded.KarenRedisChannel, encoded).Err()
 }

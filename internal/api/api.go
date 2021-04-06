@@ -9,31 +9,23 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/pprof"
 	recov "github.com/gofiber/fiber/v2/middleware/recover"
 	v1 "github.com/poopmail/canalization/internal/api/v1"
-	"github.com/poopmail/canalization/internal/auth"
+	"github.com/poopmail/canalization/internal/config"
 	"github.com/poopmail/canalization/internal/shared"
+	"github.com/poopmail/canalization/internal/static"
 	"github.com/sirupsen/logrus"
 )
 
 // API represents an instance of the REST API
 type API struct {
 	app      *fiber.App
-	Settings *Settings
 	Services *Services
-}
-
-// Settings represents the settings used by the REST API
-type Settings struct {
-	Address           string
-	RequestsPerMinute int
-	Production        bool
-	Version           string
 }
 
 // Services holds all services used by the REST API
 type Services struct {
-	Authenticator auth.Authenticator
-	Invites       shared.InviteService
 	Accounts      shared.AccountService
+	RefreshTokens shared.RefreshTokenService
+	Invites       shared.InviteService
 	Mailboxes     shared.MailboxService
 	Messages      shared.MessageService
 	Redis         *redis.Client
@@ -43,7 +35,7 @@ type Services struct {
 func (api *API) Serve() error {
 	app := fiber.New(fiber.Config{
 		DisableKeepalive:      true,
-		DisableStartupMessage: api.Settings.Production,
+		DisableStartupMessage: static.Production,
 	})
 
 	// Include CORS response headers
@@ -61,7 +53,7 @@ func (api *API) Serve() error {
 	app.Use(recov.New())
 
 	// Inject debug middlewares if the application runs in development mode
-	if !api.Settings.Production {
+	if !static.Production {
 		app.Use(logger.New())
 		app.Use(pprof.New())
 	}
@@ -69,9 +61,9 @@ func (api *API) Serve() error {
 	// Inject the rate limiter middleware
 	app.Use(limiter.New(limiter.Config{
 		Next: func(_ *fiber.Ctx) bool {
-			return !api.Settings.Production
+			return !static.Production
 		},
-		Max: api.Settings.RequestsPerMinute,
+		Max: config.Loaded.APIRateLimit,
 		LimitReached: func(ctx *fiber.Ctx) error {
 			return fiber.ErrTooManyRequests
 		},
@@ -79,22 +71,17 @@ func (api *API) Serve() error {
 
 	// Route the v1 API endpoints
 	(&v1.App{
-		Address:           api.Settings.Address,
-		RequestsPerMinute: api.Settings.RequestsPerMinute,
-		Production:        api.Settings.Production,
-		Version:           api.Settings.Version,
-
-		Authenticator: api.Services.Authenticator,
-		Invites:       api.Services.Invites,
 		Accounts:      api.Services.Accounts,
+		RefreshTokens: api.Services.RefreshTokens,
+		Invites:       api.Services.Invites,
 		Mailboxes:     api.Services.Mailboxes,
 		Messages:      api.Services.Messages,
 		Redis:         api.Services.Redis,
 	}).Route(app.Group("/v1"))
 
-	logrus.WithField("address", api.Settings.Address).Info("Serving the REST API")
+	logrus.WithField("address", config.Loaded.APIAddress).Info("Serving the REST API")
 	api.app = app
-	return app.Listen(api.Settings.Address)
+	return app.Listen(config.Loaded.APIAddress)
 }
 
 // Shutdown gracefully shuts down the REST API

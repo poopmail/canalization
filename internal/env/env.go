@@ -4,6 +4,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // MustString returns the string set under the given environment variable key or the fallback if it is not set
@@ -50,4 +51,23 @@ func MustBool(key string, fallback bool) bool {
 		return fallback
 	}
 	return parsed
+}
+
+// MustDuration returns the duration set under the given environment variable key or the fallback if it is not set or cannot be parsed
+func MustDuration(key string, negativeAllowed bool, fallback time.Duration) time.Duration {
+	value, set := os.LookupEnv(key)
+	if !set {
+		return fallback
+	}
+
+	duration, err := time.ParseDuration(value)
+	if err != nil {
+		return fallback
+	}
+
+	if duration < 0 && !negativeAllowed {
+		return fallback
+	}
+
+	return duration
 }

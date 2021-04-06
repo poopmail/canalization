@@ -12,8 +12,16 @@ create table if not exists accounts (
     "password" text not null,
     "admin" bool not null default false,
     "created" bigint not null default date_part('epoch'::text, now()),
-    "token_reset" bigint not null default date_part('epoch'::text, now()),
     primary key ("id")
+);
+
+create table if not exists refresh_tokens (
+    "id" bigint not null,
+    "account" bigint not null,
+    "token" text not null,
+    "description" text not null,
+    "created" bigint not null default date_part('epoch'::text, now()),
+    primary key ("id", "account")
 );
 
 create table if not exists mailboxes (

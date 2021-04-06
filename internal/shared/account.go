@@ -4,12 +4,11 @@ import "github.com/bwmarrin/snowflake"
 
 // Account represents an user account
 type Account struct {
-	ID         snowflake.ID `json:"id"`
-	Username   string       `json:"username"`
-	Password   string       `json:"password,omitempty"`
-	Admin      bool         `json:"admin"`
-	Created    int64        `json:"created"`
-	TokenReset int64        `json:"token_reset"`
+	ID       snowflake.ID `json:"id"`
+	Username string       `json:"username"`
+	Password string       `json:"password,omitempty"`
+	Admin    bool         `json:"admin"`
+	Created  int64        `json:"created"`
 }
 
 // AccountService represents a service which keeps track of user accounts

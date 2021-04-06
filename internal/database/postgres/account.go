@@ -86,17 +86,16 @@ func (service *accountService) AccountByUsername(username string) (*shared.Accou
 // CreateOrReplace creates or replaces an account inside the database
 func (service *accountService) CreateOrReplace(account *shared.Account) error {
 	query := `
-		INSERT INTO accounts (id, username, password, admin, created, token_reset)
-		VALUES ($1, $2, $3, $4, $5, $6)
+		INSERT INTO accounts (id, username, password, admin, created)
+		VALUES ($1, $2, $3, $4, $5)
 		ON CONFLICT (id) DO UPDATE
 			SET username = excluded.username,
 				password = excluded.password,
 				admin = excluded.admin,
-				created = excluded.created,
-				token_reset = excluded.token_reset
+				created = excluded.created
 	`
 
-	_, err := service.pool.Exec(context.Background(), query, account.ID, account.Username, account.Password, account.Admin, account.Created, account.TokenReset)
+	_, err := service.pool.Exec(context.Background(), query, account.ID, account.Username, account.Password, account.Admin, account.Created)
 	return err
 }
 
@@ -111,7 +110,7 @@ func (service *accountService) Delete(id snowflake.ID) error {
 func rowToAccount(row pgx.Row) (*shared.Account, error) {
 	account := new(shared.Account)
 
-	if err := row.Scan(&account.ID, &account.Username, &account.Password, &account.Admin, &account.Created, &account.TokenReset); err != nil {
+	if err := row.Scan(&account.ID, &account.Username, &account.Password, &account.Admin, &account.Created); err != nil {
 		return nil, err
 	}
 
