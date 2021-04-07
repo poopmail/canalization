@@ -14,6 +14,7 @@ var Loaded *Config
 // Config represents the application configuration data
 type Config struct {
 	KarenRedisChannel           string
+	MailsRedisChannel           string
 	PostgresDSN                 string
 	RefreshTokenLifetime        time.Duration
 	RefreshTokenCleanupInterval time.Duration
@@ -31,6 +32,7 @@ func init() {
 
 	Loaded = &Config{
 		KarenRedisChannel:           env.MustString("CANAL_KAREN_REDIS_CHANNEL", "karen"),
+		MailsRedisChannel:           env.MustString("CANAL_MAILS_REDIS_CHANNEL", "mails"),
 		PostgresDSN:                 env.MustString("CANAL_POSTGRES_DSN", ""),
 		RefreshTokenLifetime:        env.MustDuration("CANAL_REFRESH_TOKEN_LIFETIME", false, 7*24*time.Hour),
 		RefreshTokenCleanupInterval: env.MustDuration("CANAL_REFRESH_TOKEN_CLEANUP_INTERVAL", false, 60*time.Minute),

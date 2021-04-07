@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -11,15 +12,17 @@ import (
 	"github.com/poopmail/canalization/internal/api"
 	"github.com/poopmail/canalization/internal/config"
 	"github.com/poopmail/canalization/internal/database/postgres"
-	"github.com/poopmail/canalization/internal/hashing"
-	"github.com/poopmail/canalization/internal/id"
 	"github.com/poopmail/canalization/internal/karen"
+	"github.com/poopmail/canalization/internal/mails"
 	"github.com/poopmail/canalization/internal/shared"
 	"github.com/poopmail/canalization/internal/static"
 	"github.com/sirupsen/logrus"
 )
 
 func main() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	// Initialize the postgres database driver
 	driver, err := postgres.NewDriver(config.Loaded.PostgresDSN)
 	if err != nil {
@@ -29,18 +32,7 @@ func main() {
 		logrus.WithError(err).Fatal()
 	}
 
-	pw, _ := hashing.Hash("a")
-	driver.Accounts.CreateOrReplace(&shared.Account{
-		ID:       id.Generate(),
-		Username: "kse",
-		Password: pw,
-		Admin:    true,
-		Created:  time.Now().Unix(),
-	})
-
 	// Start up the refresh token cleanup task
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
 	go refreshTokenCleanup(ctx, driver.RefreshTokens, config.Loaded.RefreshTokenLifetime, config.Loaded.RefreshTokenCleanupInterval)
 
 	// Initialize the Redis client
@@ -60,13 +52,16 @@ func main() {
 		}
 	}()
 
+	// Initialize the karen logrus hook
+	logrus.AddHook(&karen.LogrusHook{Redis: rdb})
+
+	// Start up the mail receiving task
+	go mails.Receiver(ctx, rdb.Subscribe(ctx, config.Loaded.MailsRedisChannel), driver.Mailboxes, driver.Messages)
+
 	// Set the pre-defined domains
 	if err := setDomains(rdb, config.Loaded.DomainOverride); err != nil {
 		logrus.WithError(err).Fatal()
 	}
-
-	// Initialize the karen logrus hook
-	logrus.AddHook(&karen.LogrusHook{Redis: rdb})
 
 	// Start up the REST API
 	restApi := &api.API{
@@ -134,7 +129,7 @@ func refreshTokenCleanup(ctx context.Context, service shared.RefreshTokenService
 			deleted, err := service.DeleteExpired(lifetime)
 			if err != nil {
 				logrus.WithError(err).Error("Error while deleting expired refresh tokens")
-				continue
+				break
 			}
 			logrus.Infof("Deleted %d expired refresh tokens", deleted)
 		}
@@ -144,7 +139,7 @@ func refreshTokenCleanup(ctx context.Context, service shared.RefreshTokenService
 func setDomains(rdb *redis.Client, domains []string) error {
 	processed := make([]interface{}, len(domains))
 	for i := range processed {
-		processed[i] = domains[i]
+		processed[i] = strings.ToLower(domains[i])
 	}
 	if len(processed) > 0 {
 		if err := rdb.Del(context.Background(), static.DomainsRedisKey).Err(); err != nil {
