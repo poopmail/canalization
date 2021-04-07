@@ -20,9 +20,6 @@ import (
 )
 
 func main() {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
 	// Initialize the postgres database driver
 	driver, err := postgres.NewDriver(config.Loaded.PostgresDSN)
 	if err != nil {
@@ -33,6 +30,8 @@ func main() {
 	}
 
 	// Start up the refresh token cleanup task
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 	go refreshTokenCleanup(ctx, driver.RefreshTokens, config.Loaded.RefreshTokenLifetime, config.Loaded.RefreshTokenCleanupInterval)
 
 	// Initialize the Redis client
@@ -56,6 +55,8 @@ func main() {
 	logrus.AddHook(&karen.LogrusHook{Redis: rdb})
 
 	// Start up the mail receiving task
+	ctx, cancel = context.WithCancel(context.Background())
+	defer cancel()
 	go mails.Receiver(ctx, rdb.Subscribe(ctx, config.Loaded.MailsRedisChannel), driver.Mailboxes, driver.Messages)
 
 	// Set the pre-defined domains
