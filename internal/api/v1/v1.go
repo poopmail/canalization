@@ -40,6 +40,11 @@ func (app *App) Route(router fiber.Router) {
 	router.Get("/messages/:id", app.MiddlewareHandleBasicAuth, app.MiddlewareInjectMessage(true), app.EndpointGetMessage)
 	router.Delete("/messages/:id", app.MiddlewareHandleBasicAuth, app.MiddlewareInjectMessage(true), app.EndpointDeleteMessage)
 
+	router.Get("/invites", app.MiddlewareHandleBasicAuth, app.MiddlewareRequireAdminAuth, app.EndpointGetInvites)
+	router.Post("/invites", app.MiddlewareHandleBasicAuth, app.MiddlewareRequireAdminAuth, app.EndpointCreateInvite)
+	router.Get("/invites/:code", app.MiddlewareHandleBasicAuth, app.MiddlewareRequireAdminAuth, app.MiddlewareInjectInvite, app.EndpointGetInvite)
+	router.Delete("/invites/:code", app.MiddlewareHandleBasicAuth, app.MiddlewareRequireAdminAuth, app.MiddlewareInjectInvite, app.EndpointDeleteInvite)
+
 	router.Post("/auth/refresh_token", app.EndpointPostRefreshToken)
 	router.Get("/auth/access_token", app.EndpointGetAccessToken)
 }

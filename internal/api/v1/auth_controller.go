@@ -31,6 +31,14 @@ func (app *App) MiddlewareHandleBasicAuth(ctx *fiber.Ctx) error {
 	return ctx.Next()
 }
 
+// MiddlewareRequireAdminAuth requires admin authentication
+func (app *App) MiddlewareRequireAdminAuth(ctx *fiber.Ctx) error {
+	if !ctx.Locals("_claims").(*accessTokenClaims).Admin {
+		return fiber.ErrForbidden
+	}
+	return ctx.Next()
+}
+
 type endpointPostRefreshTokenRequestBody struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
