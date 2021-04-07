@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/bwmarrin/snowflake"
 	"github.com/jackc/pgx/v4"
@@ -20,7 +21,7 @@ type messageService struct {
 func (service *messageService) Count(mailbox string) (int, error) {
 	query := "SELECT COUNT(*) FROM messages WHERE mailbox = $1"
 
-	row := service.pool.QueryRow(context.Background(), query)
+	row := service.pool.QueryRow(context.Background(), query, strings.ToLower(mailbox))
 
 	var count int
 	if err := row.Scan(&count); err != nil {
@@ -34,7 +35,7 @@ func (service *messageService) Count(mailbox string) (int, error) {
 func (service *messageService) Messages(mailbox string, skip, limit int) ([]*shared.Message, error) {
 	query := fmt.Sprintf("SELECT * FROM messages WHERE mailbox = $1 ORDER BY created LIMIT %d OFFSET %d", limit, skip)
 
-	rows, err := service.pool.Query(context.Background(), query, mailbox)
+	rows, err := service.pool.Query(context.Background(), query, strings.ToLower(mailbox))
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return []*shared.Message{}, nil
@@ -83,7 +84,7 @@ func (service *messageService) CreateOrReplace(message *shared.Message) error {
 				created = excluded.created,
 	`
 
-	_, err := service.pool.Exec(context.Background(), query, message.ID, message.Mailbox, message.From, message.Subject, message.Content.Plain, message.Content.HTML, message.Created)
+	_, err := service.pool.Exec(context.Background(), query, message.ID, strings.ToLower(message.Mailbox), message.From, message.Subject, message.Content.Plain, message.Content.HTML, message.Created)
 	return err
 }
 
@@ -99,7 +100,7 @@ func (service *messageService) Delete(id snowflake.ID) error {
 func (service *messageService) DeleteInMailbox(mailbox string) error {
 	query := "DELETE FROM messages WHERE mailbox = $1"
 
-	_, err := service.pool.Exec(context.Background(), query, mailbox)
+	_, err := service.pool.Exec(context.Background(), query, strings.ToLower(mailbox))
 	return err
 }
 

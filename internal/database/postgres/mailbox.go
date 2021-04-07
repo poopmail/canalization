@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/bwmarrin/snowflake"
 	"github.com/jackc/pgx/v4"
@@ -96,7 +97,7 @@ func (service *mailboxService) MailboxesInAccount(account snowflake.ID, skip, li
 func (service *mailboxService) Mailbox(address string) (*shared.Mailbox, error) {
 	query := "SELECT * FROM mailboxes WHERE address = $1"
 
-	mailbox, err := rowToMailbox(service.pool.QueryRow(context.Background(), query, address))
+	mailbox, err := rowToMailbox(service.pool.QueryRow(context.Background(), query, strings.ToLower(address)))
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, nil
@@ -117,7 +118,7 @@ func (service *mailboxService) CreateOrReplace(mailbox *shared.Mailbox) error {
 				created = excluded.created
 	`
 
-	_, err := service.pool.Exec(context.Background(), query, mailbox.Address, mailbox.Account, mailbox.Created)
+	_, err := service.pool.Exec(context.Background(), query, strings.ToLower(mailbox.Address), mailbox.Account, mailbox.Created)
 	return err
 }
 
@@ -125,7 +126,7 @@ func (service *mailboxService) CreateOrReplace(mailbox *shared.Mailbox) error {
 func (service *mailboxService) Delete(address string) error {
 	query := "DELETE FROM mailboxes WHERE address = $1"
 
-	_, err := service.pool.Exec(context.Background(), query, address)
+	_, err := service.pool.Exec(context.Background(), query, strings.ToLower(address))
 	return err
 }
 
