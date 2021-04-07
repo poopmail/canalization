@@ -119,14 +119,18 @@ func main() {
 	<-sc
 }
 
-func refreshTokenCleanup(ctx context.Context, service shared.RefreshTokenService, lifetime, delay time.Duration) {
+func refreshTokenCleanup(ctx context.Context, service shared.RefreshTokenService, lifetime, interval time.Duration) {
 	logrus.Info("Starting the refresh token cleanup task")
+	delay := time.Duration(0)
 	for {
 		select {
 		case <-ctx.Done():
 			logrus.Info("Shutting down the refresh token cleanup task")
 			return
 		case <-time.After(delay):
+			if delay == 0 {
+				delay = interval
+			}
 			deleted, err := service.DeleteExpired(lifetime)
 			if err != nil {
 				logrus.WithError(err).Error("Error while deleting expired refresh tokens")

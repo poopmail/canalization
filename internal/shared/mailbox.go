@@ -4,9 +4,9 @@ import "github.com/bwmarrin/snowflake"
 
 // Mailbox represents a simple mailbox mapped to an user account
 type Mailbox struct {
-	Address string `json:"address"`
-	Account string `json:"account"`
-	Created int64  `json:"created"`
+	Address string       `json:"address"`
+	Account snowflake.ID `json:"account"`
+	Created int64        `json:"created"`
 }
 
 // MailboxService represents a service which keeps track of mailboxes

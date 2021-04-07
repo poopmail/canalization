@@ -234,6 +234,34 @@ func (app *App) EndpointDeleteAccount(ctx *fiber.Ctx) error {
 	return app.Accounts.Delete(account.ID)
 }
 
+// ######################
+// ### REFRESH TOKENS ###
+// ######################
+
+// MiddlewareInjectRefreshToken handles refresh token injection
+func (app *App) MiddlewareInjectRefreshToken(ctx *fiber.Ctx) error {
+	// Parse the snowflake ID of the refresh token
+	rawID := ctx.Params("id")
+	id, err := snowflake.ParseString(rawID)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "invalid snowflake ID")
+	}
+
+	account := ctx.Locals("_account").(*shared.Account)
+
+	// Retrieve the refresh token
+	refreshToken, err := app.RefreshTokens.RefreshToken(account.ID, id)
+	if err != nil {
+		return err
+	}
+	if refreshToken == nil {
+		return fiber.NewError(fiber.StatusNotFound, "refresh token not found")
+	}
+
+	ctx.Locals("_refresh_token", refreshToken)
+	return ctx.Next()
+}
+
 // EndpointGetAccountRefreshTokens handles the 'GET /v1/accounts/:identifier/refresh_tokens' API endpoint
 func (app *App) EndpointGetAccountRefreshTokens(ctx *fiber.Ctx) error {
 	// Parse the 'skip' query parameter
@@ -275,26 +303,7 @@ func (app *App) EndpointGetAccountRefreshTokens(ctx *fiber.Ctx) error {
 
 // EndpointGetAccountRefreshToken handles the 'GET /v1/accounts/:identifier/refresh_tokens/:id' API endpoint
 func (app *App) EndpointGetAccountRefreshToken(ctx *fiber.Ctx) error {
-	// Parse the snowflake ID of the refresh token
-	rawID := ctx.Params("id")
-	id, err := snowflake.ParseString(rawID)
-	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, "invalid snowflake ID")
-	}
-
-	account := ctx.Locals("_account").(*shared.Account)
-
-	// Retrieve the refresh token
-	refreshToken, err := app.RefreshTokens.RefreshToken(account.ID, id)
-	if err != nil {
-		return err
-	}
-	if refreshToken == nil {
-		return fiber.NewError(fiber.StatusNotFound, "refresh token not found")
-	}
-
-	// Remove the token from the retrieved refresh token
-	copy := *refreshToken
+	copy := *ctx.Locals("_refresh_token").(*shared.RefreshToken)
 	copy.Token = ""
 	return ctx.JSON(copy)
 }
@@ -305,23 +314,7 @@ type endpointPatchAccountRefreshTokenRequestBody struct {
 
 // EndpointPatchAccountRefreshToken handles the 'PATCH /v1/accounts/:identifier/refresh_tokens/:id' API endpoint
 func (app *App) EndpointPatchAccountRefreshToken(ctx *fiber.Ctx) error {
-	// Parse the snowflake ID of the refresh token
-	rawID := ctx.Params("id")
-	id, err := snowflake.ParseString(rawID)
-	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, "invalid snowflake ID")
-	}
-
-	account := ctx.Locals("_account").(*shared.Account)
-
-	// Retrieve the refresh token
-	refreshToken, err := app.RefreshTokens.RefreshToken(account.ID, id)
-	if err != nil {
-		return err
-	}
-	if refreshToken == nil {
-		return fiber.NewError(fiber.StatusNotFound, "refresh token not found")
-	}
+	refreshToken := ctx.Locals("_refresh_token").(*shared.RefreshToken)
 
 	// Try to parse the request into a request body struct
 	body := new(endpointPatchAccountRefreshTokenRequestBody)
@@ -352,6 +345,15 @@ func (app *App) EndpointDeleteAccountRefreshToken(ctx *fiber.Ctx) error {
 		id, err := snowflake.ParseString(rawID)
 		if err != nil {
 			return fiber.NewError(fiber.StatusBadRequest, "invalid snowflake ID")
+		}
+
+		// Check if the refresh token exists
+		found, err := app.RefreshTokens.RefreshToken(account.ID, id)
+		if err != nil {
+			return err
+		}
+		if found == nil {
+			return fiber.NewError(fiber.StatusNotFound, "refresh token not found")
 		}
 
 		// Delete the refresh token

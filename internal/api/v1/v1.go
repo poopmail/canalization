@@ -27,9 +27,14 @@ func (app *App) Route(router fiber.Router) {
 	router.Patch("/accounts/:identifier", app.MiddlewareHandleBasicAuth, app.MiddlewareInjectAccount(true), app.EndpointPatchAccount)
 	router.Delete("/accounts/:identifier", app.MiddlewareHandleBasicAuth, app.MiddlewareInjectAccount(true), app.EndpointDeleteAccount)
 	router.Get("/accounts/:identifier/refresh_tokens", app.MiddlewareHandleBasicAuth, app.MiddlewareInjectAccount(true), app.EndpointGetAccountRefreshTokens)
-	router.Get("/accounts/:identifier/refresh_tokens/:id", app.MiddlewareHandleBasicAuth, app.MiddlewareInjectAccount(true), app.EndpointGetAccountRefreshToken)
-	router.Patch("/accounts/:identifier/refresh_tokens/:id", app.MiddlewareHandleBasicAuth, app.MiddlewareInjectAccount(true), app.EndpointPatchAccountRefreshToken)
+	router.Get("/accounts/:identifier/refresh_tokens/:id", app.MiddlewareHandleBasicAuth, app.MiddlewareInjectAccount(true), app.MiddlewareInjectRefreshToken, app.EndpointGetAccountRefreshToken)
+	router.Patch("/accounts/:identifier/refresh_tokens/:id", app.MiddlewareHandleBasicAuth, app.MiddlewareInjectAccount(true), app.MiddlewareInjectRefreshToken, app.EndpointPatchAccountRefreshToken)
 	router.Delete("/accounts/:identifier/refresh_tokens/:id", app.MiddlewareHandleBasicAuth, app.MiddlewareInjectAccount(true), app.EndpointDeleteAccountRefreshToken)
+
+	router.Get("/mailboxes/check/:address", app.MiddlewareHandleBasicAuth, app.EndpointCheckMailboxAddress)
+	router.Get("/mailboxes", app.MiddlewareHandleBasicAuth, app.EndpointGetMailboxes)
+	router.Get("/mailboxes/:address", app.MiddlewareHandleBasicAuth, app.MiddlewareInjectMailbox(true), app.EndpointGetMailbox)
+	router.Delete("/mailboxes/:address", app.MiddlewareHandleBasicAuth, app.MiddlewareInjectMailbox(true), app.EndpointDeleteMailbox)
 
 	router.Post("/auth/refresh_token", app.EndpointPostRefreshToken)
 	router.Get("/auth/access_token", app.EndpointGetAccessToken)
