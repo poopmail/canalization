@@ -23,6 +23,7 @@ type Config struct {
 	DomainOverride              []string
 	APIAddress                  string
 	APIRateLimit                int
+	AccountMailboxLimit         int
 }
 
 func init() {
@@ -39,5 +40,6 @@ func init() {
 		DomainOverride:              env.MustStringSlice("CANAL_DOMAIN_OVERRIDE", ",", []string{}),
 		APIAddress:                  env.MustString("CANAL_API_ADDRESS", ":8080"),
 		APIRateLimit:                env.MustInt("CANAL_API_RATE_LIMIT", 60),
+		AccountMailboxLimit:         env.MustInt("CANAL_ACCOUNT_MAILBOX_LIMIT", 10),
 	}
 }

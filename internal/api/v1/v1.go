@@ -34,6 +34,7 @@ func (app *App) Route(router fiber.Router) {
 	router.Get("/mailboxes/check/:address", app.MiddlewareHandleBasicAuth, app.EndpointCheckMailboxAddress)
 	router.Get("/mailboxes", app.MiddlewareHandleBasicAuth, app.EndpointGetMailboxes)
 	router.Get("/mailboxes/:address", app.MiddlewareHandleBasicAuth, app.MiddlewareInjectMailbox(true), app.EndpointGetMailbox)
+	router.Post("/mailboxes", app.MiddlewareHandleBasicAuth, app.EndpointCreateMailbox)
 	router.Delete("/mailboxes/:address", app.MiddlewareHandleBasicAuth, app.MiddlewareInjectMailbox(true), app.EndpointDeleteMailbox)
 
 	router.Get("/messages", app.MiddlewareHandleBasicAuth, app.EndpointGetMessages)
@@ -41,8 +42,8 @@ func (app *App) Route(router fiber.Router) {
 	router.Delete("/messages/:id", app.MiddlewareHandleBasicAuth, app.MiddlewareInjectMessage(true), app.EndpointDeleteMessage)
 
 	router.Get("/invites", app.MiddlewareHandleBasicAuth, app.MiddlewareRequireAdminAuth, app.EndpointGetInvites)
-	router.Post("/invites", app.MiddlewareHandleBasicAuth, app.MiddlewareRequireAdminAuth, app.EndpointCreateInvite)
 	router.Get("/invites/:code", app.MiddlewareHandleBasicAuth, app.MiddlewareRequireAdminAuth, app.MiddlewareInjectInvite, app.EndpointGetInvite)
+	router.Post("/invites", app.MiddlewareHandleBasicAuth, app.MiddlewareRequireAdminAuth, app.EndpointCreateInvite)
 	router.Delete("/invites/:code", app.MiddlewareHandleBasicAuth, app.MiddlewareRequireAdminAuth, app.MiddlewareInjectInvite, app.EndpointDeleteInvite)
 
 	router.Post("/auth/refresh_token", app.EndpointPostRefreshToken)
