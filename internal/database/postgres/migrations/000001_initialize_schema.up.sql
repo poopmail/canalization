@@ -26,7 +26,7 @@ create table if not exists refresh_tokens (
 
 create table if not exists mailboxes (
     "address" text not null,
-    "account" bigint not null,
+    "account" text not null,
     "created" bigint not null default date_part('epoch'::text, now()),
     primary key ("address")
 );
