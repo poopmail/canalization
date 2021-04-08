@@ -127,7 +127,7 @@ func (app *App) EndpointCreateAccount(ctx *fiber.Ctx) error {
 		return err
 	}
 	if found != nil {
-		return fiber.NewError(fiber.StatusUnprocessableEntity, "username taken")
+		return fiber.NewError(fiber.StatusConflict, "username taken")
 	}
 
 	// Validate and delete the invite code

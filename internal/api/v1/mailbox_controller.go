@@ -221,8 +221,17 @@ func (app *App) EndpointCreateMailbox(ctx *fiber.Ctx) error {
 		}
 	}
 
-	// Create the mailbox
+	// Check if the mailbox already exists
 	address := body.Key + "@" + body.Domain
+	found, err := app.Mailboxes.Mailbox(address)
+	if err != nil {
+		return err
+	}
+	if found != nil {
+		return fiber.NewError(fiber.StatusConflict, "mailbox address taken")
+	}
+
+	// Create the mailbox
 	mailbox := &shared.Mailbox{
 		Address: address,
 		Account: account.ID,
@@ -232,7 +241,7 @@ func (app *App) EndpointCreateMailbox(ctx *fiber.Ctx) error {
 		return err
 	}
 
-	return ctx.JSON(mailbox)
+	return ctx.Status(fiber.StatusCreated).JSON(mailbox)
 }
 
 // EndpointDeleteMailbox handles the 'DELETE /v1/mailboxes/:address' API endpoint
