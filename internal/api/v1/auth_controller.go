@@ -155,12 +155,14 @@ func (app *App) EndpointGetAccessToken(ctx *fiber.Ctx) error {
 	}
 
 	// Issue a new access token
-	accessToken, err := app.issueAccessToken(account)
+	expires := time.Now().Add(config.Loaded.AccessTokenLifetime).Unix()
+	accessToken, err := app.issueAccessToken(account, expires)
 	if err != nil {
 		return err
 	}
 	return ctx.JSON(fiber.Map{
 		"access_token": accessToken,
+		"expires":      expires,
 	})
 }
 
@@ -170,12 +172,11 @@ type accessTokenClaims struct {
 	Admin bool         `json:"c_admin"`
 }
 
-func (app *App) issueAccessToken(account *shared.Account) (string, error) {
-	now := time.Now()
+func (app *App) issueAccessToken(account *shared.Account, expires int64) (string, error) {
 	return jwt.NewWithClaims(jwt.SigningMethodHS256, accessTokenClaims{
 		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: now.Add(config.Loaded.AccessTokenLifetime).Unix(),
-			IssuedAt:  now.Unix(),
+			ExpiresAt: expires,
+			IssuedAt:  time.Now().Unix(),
 			Subject:   account.ID.String(),
 		},
 		ID:    account.ID,
