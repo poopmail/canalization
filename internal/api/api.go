@@ -10,9 +10,11 @@ import (
 	recov "github.com/gofiber/fiber/v2/middleware/recover"
 	v1 "github.com/poopmail/canalization/internal/api/v1"
 	"github.com/poopmail/canalization/internal/config"
+	"github.com/poopmail/canalization/internal/karen"
 	"github.com/poopmail/canalization/internal/shared"
 	"github.com/poopmail/canalization/internal/static"
 	"github.com/sirupsen/logrus"
+	"github.com/ztrue/tracerr"
 )
 
 // API represents an instance of the REST API
@@ -34,6 +36,18 @@ type Services struct {
 // Serve serves the REST API
 func (api *API) Serve() error {
 	app := fiber.New(fiber.Config{
+		ErrorHandler: func(_ *fiber.Ctx, err error) error {
+			if fiberErr, ok := err.(*fiber.Error); ok {
+				if fiberErr.Code >= 500 {
+					return karen.Send(api.Services.Redis, karen.Message{
+						Type:        karen.MessageTypeError,
+						Service:     static.KarenServiceName,
+						Topic:       "API Request",
+						Description: tracerr.Sprint(tracerr.Wrap(err)),
+					})
+				}
+			}
+		},
 		DisableKeepalive:      true,
 		DisableStartupMessage: static.Production,
 	})
