@@ -47,6 +47,7 @@ func (api *API) Serve() error {
 					})
 				}
 			}
+			return nil
 		},
 		DisableKeepalive:      true,
 		DisableStartupMessage: static.Production,
