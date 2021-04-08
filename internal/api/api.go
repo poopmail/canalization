@@ -36,18 +36,18 @@ type Services struct {
 // Serve serves the REST API
 func (api *API) Serve() error {
 	app := fiber.New(fiber.Config{
-		ErrorHandler: func(_ *fiber.Ctx, err error) error {
+		ErrorHandler: func(ctx *fiber.Ctx, err error) error {
 			if fiberErr, ok := err.(*fiber.Error); ok {
 				if fiberErr.Code >= 500 {
-					return karen.Send(api.Services.Redis, karen.Message{
+					return fiber.DefaultErrorHandler(ctx, karen.Send(api.Services.Redis, karen.Message{
 						Type:        karen.MessageTypeError,
 						Service:     static.KarenServiceName,
 						Topic:       "API Request",
 						Description: tracerr.Sprint(tracerr.Wrap(err)),
-					})
+					}))
 				}
 			}
-			return nil
+			return fiber.DefaultErrorHandler(ctx, err)
 		},
 		DisableKeepalive:      true,
 		DisableStartupMessage: static.Production,
