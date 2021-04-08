@@ -114,7 +114,7 @@ func (app *App) EndpointGetMailboxes(ctx *fiber.Ctx) error {
 	}
 
 	// Handle authentication
-	if (account == nil && !claims.Admin) || (account.ID != claims.ID && !claims.Admin) {
+	if (account == nil && !claims.Admin) || (account != nil && account.ID != claims.ID && !claims.Admin) {
 		return fiber.ErrForbidden
 	}
 

@@ -73,11 +73,11 @@ func (service *messageService) Message(id snowflake.ID) (*shared.Message, error)
 // CreateOrReplace creates or replaces a message inside the database
 func (service *messageService) CreateOrReplace(message *shared.Message) error {
 	query := `
-		INSERT INTO messages (id, mailbox, from, subject, content_plain, content_html, created)
+		INSERT INTO messages (id, mailbox, "from", subject, content_plain, content_html, created)
 		VALUES ($1, $2, $3, $4, $5, $6, $7)
 		ON CONFLICT (id) DO UPDATE
 			SET mailbox = excluded.mailbox,
-				from = excluded.from,
+				"from" = excluded.from,
 				subject = excluded.subject,
 				content_plain = excluded.content_plain,
 				content_html = excluded.content_html,
