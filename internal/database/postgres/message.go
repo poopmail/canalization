@@ -81,7 +81,7 @@ func (service *messageService) CreateOrReplace(message *shared.Message) error {
 				subject = excluded.subject,
 				content_plain = excluded.content_plain,
 				content_html = excluded.content_html,
-				created = excluded.created,
+				created = excluded.created
 	`
 
 	_, err := service.pool.Exec(context.Background(), query, message.ID, strings.ToLower(message.Mailbox), message.From, message.Subject, message.Content.Plain, message.Content.HTML, message.Created)
