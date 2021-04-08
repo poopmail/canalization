@@ -39,12 +39,15 @@ func (api *API) Serve() error {
 		ErrorHandler: func(ctx *fiber.Ctx, err error) error {
 			if fiberErr, ok := err.(*fiber.Error); ok {
 				if fiberErr.Code >= 500 {
-					return fiber.DefaultErrorHandler(ctx, karen.Send(api.Services.Redis, karen.Message{
+					karenErr := karen.Send(api.Services.Redis, karen.Message{
 						Type:        karen.MessageTypeError,
 						Service:     static.KarenServiceName,
 						Topic:       "API Request",
 						Description: tracerr.Sprint(tracerr.Wrap(err)),
-					}))
+					})
+					if karenErr != nil {
+						logrus.WithError(err).Error()
+					}
 				}
 			}
 			return fiber.DefaultErrorHandler(ctx, err)
